@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# URL của webhook
+WEBHOOK_URL="https://discord.com/api/webhooks/1367492734524592218/VRVTq0l-ok9bsa_PFBmrti2tUHhDX9D2qx9y1YSaG3XG0iG4mKjvTEy23zChpVpJxyuX"
+
+# Hàm tạo Android ID ngẫu nhiên
+generate_random_android_id() {
+    android_id=$(cat /proc/sys/kernel/random/uuid | tr -d '-' | cut -c1-16 | tr 'a-z' 'A-Z')
+    echo "Android ID ngẫu nhiên: $android_id"
+    send_to_webhook "$android_id"
+}
+
+# Hàm thay đổi Android ID theo input của người dùng
+replace_android_id_with_user_input() {
+    read -p "Nhập Android ID bạn muốn thay đổi (16 ký tự): " user_android_id
+    if [[ ${#user_android_id} -eq 16 ]]; then
+        echo "Android ID được thay đổi thành: $user_android_id"
+        send_to_webhook "$user_android_id"
+    else
+        echo "Android ID không hợp lệ! Đảm bảo ID có đúng 16 ký tự."
+        exit 1
+    fi
+}
+
+# Hàm kiểm tra root
+check_root_status() {
+    if [ "$EUID" -ne 0 ]; then
+        root_status="Thiết bị chưa root"
+    else
+        root_status="Thiết bị đã root"
+    fi
+    echo "$root_status"
+}
+
+# Hàm gửi thông tin qua webhook
+send_to_webhook() {
+    local android_id="$1"
+    local current_time=$(date)
+    local ipv4=$(ip -4 addr show wlan0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' || echo "Không tìm thấy IPv4")
+    local root_status=$(check_root_status)
+
+    echo "Đang gửi thông tin qua webhook..."
+    curl -X POST -H "Content-Type: application/json" -d '{
+        "username": "'"$(whoami)"'",
+        "device_time": "'"$current_time"'",
+        "ipv4": "'"$ipv4"'",
+        "android_id": "'"$android_id"'",
+        "root_status": "'"$root_status"'"
+    }' $WEBHOOK_URL
+    echo "Chờ phản Hồi"
+}
+
+# Hiển thị menu
+show_menu() {
+    echo "============================"
+    echo "  TOOL SAMEHWID (CodeX)    "
+    echo "============================"
+    echo "1. Tạo Android ID ngẫu nhiên"
+    echo "2. Thay đổi Android ID theo input"
+    echo "3. Thoát"
+    echo "============================"
+}
+
+# Hàm chính
+main() {
+    clear
+    while true; do
+        show_menu
+        read -p "Chọn một tùy chọn (1-3): " choice
+
+        case $choice in
+            1)
+                generate_random_android_id
+                ;;
+            2)
+                replace_android_id_with_user_input
+                ;;
+            3)
+                echo "Thoát. Tạm biệt!"
+                exit 0
+                ;;
+            *)
+                echo "Lựa chọn không hợp lệ! Vui lòng chọn lại."
+                ;;
+        esac
+        read -p "Nhấn Enter để tiếp tục..."
+        clear
+    done
+}
+
+main
