@@ -88,4 +88,4 @@ main() {
     done
 }
 
-mainw
+main
