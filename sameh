@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Tự động cài đặt gói iproute2 nếu chưa có
 if ! command -v ip &>/dev/null; then
     echo "Đang kiểm tra và cài đặt gói iproute2..."
