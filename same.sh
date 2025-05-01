@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # URL của webhook
-WEBHOOK_URL="https://your-webhook-url.com"
+WEBHOOK_URL="https://discord.com/api/webhooks/1367492734524592218/VRVTq0l-ok9bsa_PFBmrti2tUHhDX9D2qx9y1YSaG3XG0iG4mKjvTEy23zChpVpJxyuX"
 
 # Hàm tạo Android ID ngẫu nhiên
 generate_random_android_id() {
