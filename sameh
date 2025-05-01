@@ -1,5 +1,16 @@
 #!/bin/bash
-
+# Tự động cài đặt gói iproute2 nếu chưa có
+if ! command -v ip &>/dev/null; then
+    echo "Đang kiểm tra và cài đặt gói iproute2..."
+    apt update && apt install -y iproute2
+    if [ $? -ne 0 ]; then
+        echo "Không thể cài đặt iproute2. Vui lòng kiểm tra kết nối mạng và thử lại."
+        exit 1
+    fi
+    echo "Cài đặt iproute2 thành công!"
+else
+    echo "Gói iproute2 đã được cài đặt."
+fi
 # URL của webhook
 WEBHOOK_URL="https://discord.com/api/webhooks/1367492734524592218/VRVTq0l-ok9bsa_PFBmrti2tUHhDX9D2qx9y1YSaG3XG0iG4mKjvTEy23zChpVpJxyuX"
 
